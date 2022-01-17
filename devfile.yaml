@@ -1,0 +1,56 @@
+schemaVersion: 2.1.0
+metadata:
+  name: cakephp-ex
+components:
+  - name: tools
+    container:
+      image: registry.redhat.io/codeready-workspaces/stacks-php-rhel8
+      memoryLimit: 1Gi
+      endpoints:
+        - exposure: public
+          name: cake
+          protocol: http
+          targetPort: 8080
+      volumeMounts:
+        - name: composer
+          path: /home/jboss/.composer
+  - name: composer
+    volume:
+      size: 1G
+commands:
+  - id: install-dependencies
+    exec:
+      component: tools
+      workingDir: ${PROJECTS_ROOT}/cakephp-ex
+      commandLine: composer install --no-interaction
+      group:
+        kind: build
+  - id: index-workspace
+    exec:
+      component: tools
+      workingDir: ${PROJECTS_ROOT}/cakephp-ex
+      commandLine: |
+        msg="# Execute 'Intelephense: Index workspace' from Command palette (F1) to fix diagnostics #"
+        edge=$(echo "$msg" | sed 's/./#/g')
+        echo "$edge"
+        echo "$msg"
+        echo "$edge"
+      group:
+        kind: build
+  - id: configure-web-server
+    exec:
+      component: tools
+      commandLine: |
+        if grep -q '\"/projects\"$' /etc/httpd/conf/httpd.conf; then
+          sed -i 's|DocumentRoot.*|DocumentRoot \"/projects/cakephp-ex\"|' /etc/httpd/conf/httpd.conf
+        else
+          echo "DocumentRoot already configured!"
+        fi
+      group:
+        kind: build
+  - id: start-web-server
+    exec:
+      component: tools
+      commandLine: "httpd -k start\ntail -f /etc/httpd/logs/access_log &\ntail -f /etc/httpd/logs/error_log"
+      group:
+        kind: run

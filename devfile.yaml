@@ -13,19 +13,19 @@ components:
           targetPort: 8080
       volumeMounts:
         - name: composer
-          path: /home/jboss/.composer
+          path: /home/user/.composer
   - name: composer
     volume:
       size: 1G
 commands:
-  - id: install-dependencies
+  - id: 1-install-dependencies
     exec:
       component: tools
       workingDir: ${PROJECTS_ROOT}/cakephp-ex
       commandLine: composer install --no-interaction
       group:
         kind: build
-  - id: index-workspace
+  - id: 2-index-workspace
     exec:
       component: tools
       workingDir: ${PROJECTS_ROOT}/cakephp-ex
@@ -37,7 +37,7 @@ commands:
         echo "$edge"
       group:
         kind: build
-  - id: configure-web-server
+  - id: 3-configure-web-server
     exec:
       component: tools
       commandLine: |
@@ -48,7 +48,7 @@ commands:
         fi
       group:
         kind: build
-  - id: start-web-server
+  - id: 4-start-web-server
     exec:
       component: tools
       commandLine: "httpd -k start\ntail -f /etc/httpd/logs/access_log &\ntail -f /etc/httpd/logs/error_log"
